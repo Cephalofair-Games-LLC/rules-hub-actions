@@ -23,8 +23,6 @@ runs:
       name: "Get commit metadata"
       shell: bash
       run: |
-        pwd;
-        ls;
         LINE=$(git log -1 --pretty="format:%cN=%B" ${{ github.sha }});
         AUTHOR=$(echo $LINE | cut -d'=' -f1);
         COMMIT=$(echo $LINE | cut -d'=' -f2-);
