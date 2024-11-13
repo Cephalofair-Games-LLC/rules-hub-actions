@@ -11,7 +11,7 @@ inputs:
   actions-repo:
     description: "The actions repo."
     required: true
-    default: cephalofair-games-llc/rules-actions
+    default: cephalofair-games-llc/rules-hub-actions
 runs:
   using: "composite"
   steps:
@@ -58,35 +58,3 @@ runs:
     - id: deploy-site
       name: "Deploy Site"
       uses: actions/deploy-pages@v4
-
-    # - name: "dummy step"
-    #   shell: bash
-    #   env:
-    #     PAT: ${{ inputs.pat }}
-    #   run: |
-    #     write() { printf "$1\n" >> ../status.md; }
-
-    #     write "# this is a dummy step for now.";
-    #     write "\n# pwd";
-    #     write "\`$(pwd)\`";
-    #     write "\n# tree";
-    #     write "\`\`\`\r\n$(tree)\r\n\`\`\`";
-    #     write "\n# most recent commit";
-    #     write "\`\`\`";
-    #     write "$(git log -1 HEAD)";
-    #     write "\`\`\`";
-
-    #     git checkout -b gh_pages;
-    #     git pull origin gh_pages || printf "No branch on origin yet.";
-
-    #     rm -rf ./*;
-
-    #     mv ../status.md ./;
-
-    #     git add .;
-
-    #     git config user.name "Smell-o-bot";
-    #     git config user.email "smell-o-bot@j.diode.pw";
-
-    #     git commit -m "adding status file?";
-    #     git push -f origin gh_pages;
