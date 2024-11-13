@@ -1,0 +1,50 @@
+name: "Trigger Hub"
+description: "This will trigger the Hub Repo to pull in the changes from this repo."
+inputs:
+  hub-repo:
+    description: "The repo to trigger."
+    required: true
+    default: cephalofair-games-llc/rules-hub
+  target-action:
+    description: "The name of the action to trigger."
+    required: true
+    default: update-hub
+  pat:
+    description: "An access token with the correct permissions"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - id: main-checkout
+      name: "Checkout this repo"
+      uses: actions/checkout@v4
+
+    - id: extract-commit
+      name: "Get commit metadata"
+      shell: bash
+      run: |
+        pwd;
+        ls;
+        LINE=$(git log -1 --pretty="format:%cN=%B" ${{ github.sha }});
+        AUTHOR=$(echo $LINE | cut -d'=' -f1);
+        COMMIT=$(echo $LINE | cut -d'=' -f2-);
+        echo "AUTHOR=${AUTHOR}" >> $GITHUB_OUTPUT;
+        echo "COMMIT=${COMMIT}" >> $GITHUB_OUTPUT;
+
+    - id: trigger-hub-action
+      name: "Pull the Trigger"
+      shell: bash
+      env:
+        HUB_REPO: ${{ inputs.hub-repo }}
+        TARGET_ACTION: ${{ inputs.target-action }}
+        PAT: ${{ inputs.pat }}
+        AUTHOR: ${{ steps.extract-commit.outputs.AUTHOR }}
+        COMMIT: ${{ steps.extract-commit.outputs.COMMIT }}
+        ACTOR: ${{ github.actor }}
+      run: |
+        curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${PAT}" \
+          https://api.github.com/repos/${HUB_REPO}/dispatches \
+          -d "{\"event_type\": \"${TARGET_ACTION}\", \"client_payload\": {\"source\": \"${{ github.repository }}\", \"author\":\"${AUTHOR}\",\"commit\":\"${COMMIT}\",\"actor\":\"${ACTOR}\"}}"

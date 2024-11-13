@@ -1,0 +1,72 @@
+name: "Update Hub"
+description: "This does the logic of pulling in the latest version of a given language"
+inputs:
+  source:
+    description: "The name of the source repo"
+    required: true
+  actor:
+    description: "The username of the author."
+    default: "unknown"
+  author:
+    description: "The author of the commit that triggered this."
+    default: "unknown"
+  commit:
+    description: "The commit message that triggered this."
+    default: "unknown"
+  pat:
+    description: "A Personal Access Token"
+    required: true
+  hub-repo:
+    description: "The repo to trigger."
+    required: true
+    default: cephalofair-games-llc/rules-hub
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Checkout hub repo"
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        repository: ${{ inputs.hub-repo }}
+        token: ${{ inputs.pat }}
+        submodules: true
+
+    - name: "Initialize Submodules"
+      shell: bash
+      run: |
+
+        git config --global user.name "Smell-o-bot"
+        git config --global user.email "smell-o-bot@j.diode.pw"
+
+        git submodule init;
+        git submodule update;
+
+    - name: "Add / Update Submodule"
+      shell: bash
+      env:
+        SOURCE: ${{ inputs.source }}
+        AUTHOR: ${{ inputs.author }}
+        ACTOR: ${{ inputs.actor }}
+        COMMIT: ${{ inputs.commit }}
+      run: |
+        BASE=$(basename ${SOURCE});
+        SUBMODULE_PATH="translations/${BASE}";
+        SUBMODULE_GIT_URL="https://github.com/${SOURCE}.git";
+
+        LOCAL_COMMIT="[(${ACTOR} | ${AUTHOR}) - ${COMMIT}]";
+
+        ACTION=$([ -e "${SUBMODULE_PATH}" ] && echo "Updating" || echo "Adding");
+
+        echo "${ACTION} submodule...";
+
+        if [ -e "${SUBMODULE_PATH}" ]; then
+          git submodule update --remote --checkout -f "${SUBMODULE_PATH}";
+          git add "${SUBMODULE_PATH}";
+        else
+          git submodule add "${SUBMODULE_GIT_URL}" "${SUBMODULE_PATH}";
+        fi
+
+        git commit -m "${ACTION} ${SOURCE}: ${LOCAL_COMMIT}";
+
+        git push;
